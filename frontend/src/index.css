@@ -1,14 +1,17 @@
 :root {
   /* HSL Colors for a rich dark theme */
-  --bg-color: hsl(222, 47%, 11%);
-  --surface-color: hsl(222, 47%, 15%);
-  --surface-color-light: hsl(222, 47%, 20%);
-  --text-main: hsl(210, 40%, 98%);
-  --text-muted: hsl(215, 20%, 65%);
+  --bg-color: #000000;
+  --surface-color: #111111;
+  --surface-color-light: #222222;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
 
-  --primary: hsl(217, 91%, 60%);
-  --primary-hover: hsl(217, 91%, 50%);
-  --accent: hsl(280, 80%, 60%);
+  --primary: #14b8a6;
+  /* Teal */
+  --primary-hover: #0f766e;
+  /* Darker Teal */
+  --accent: #ffffff;
+  /* White */
 
   --red-accent: hsl(350, 80%, 60%);
   --green-accent: hsl(150, 70%, 45%);

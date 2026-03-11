@@ -1,69 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import ProfileOverview from '../components/ProfileOverview';
+import ActivityDashboard from '../components/ActivityDashboard';
+import PostHistory from '../components/PostHistory';
+import PrivacySettings from '../components/PrivacySettings';
 
 export default function Profile() {
     const [alias, setAlias] = useState('');
-    const [apiKey, setApiKey] = useState('');
-    const [apiEndpoint, setApiEndpoint] = useState('');
-    const [apiModel, setApiModel] = useState('');
-    const [saved, setSaved] = useState(false);
+    const [profileData, setProfileData] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setAlias(localStorage.getItem('userAlias') || '');
-        setApiKey(localStorage.getItem('aiApiKey') || '');
-        setApiEndpoint(localStorage.getItem('aiApiEndpoint') || 'https://api.openai.com/v1/chat/completions');
-        setApiModel(localStorage.getItem('aiApiModel') || 'gpt-3.5-turbo');
+        const storedAlias = localStorage.getItem('userAlias') || '';
+        setAlias(storedAlias);
+
+        if (storedAlias) {
+            fetchProfileData(storedAlias);
+        } else {
+            setLoading(false);
+        }
     }, []);
 
-    const handleSave = () => {
-        localStorage.setItem('aiApiKey', apiKey);
-        localStorage.setItem('aiApiEndpoint', apiEndpoint);
-        localStorage.setItem('aiApiModel', apiModel);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+    const fetchProfileData = async (userAlias) => {
+        setLoading(true);
+        try {
+            const [profileRes, postsRes] = await Promise.all([
+                fetch(`/api/users/${userAlias}/profile`),
+                fetch(`/api/users/${userAlias}/posts`)
+            ]);
+
+            if (profileRes.ok) {
+                const data = await profileRes.json();
+                setProfileData(data.user);
+                setStats({
+                    totalPosts: data.totalPosts,
+                    totalUpvotes: data.totalUpvotes,
+                    totalReposts: data.totalReposts,
+                    commonTags: data.commonTags
+                });
+            } else {
+                console.error("Failed to fetch profile. Status:", profileRes.status);
+            }
+
+            if (postsRes.ok) {
+                const postsData = await postsRes.json();
+                setPosts(postsData);
+            }
+        } catch (error) {
+            console.error("Error fetching profile data:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
+    const handleUpdateProfile = async (updates) => {
+        try {
+            const res = await fetch(`/api/users/${alias}/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+            if (res.ok) {
+                const updatedUser = await res.json();
+                setProfileData(updatedUser);
+            }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+        }
+    };
+
+    if (loading) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading Profile...</div>;
+
+    if (!alias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>You must be assigned an alias first. Create a post to initialize your profile!</div>;
+
     return (
-        <div className="animate-enter">
-            <h2 style={{ marginBottom: '1rem' }}>Your Anonymous Profile</h2>
-            <Card style={{ marginBottom: '2rem' }}>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>User Alias</p>
-                <h3 style={{ color: 'var(--primary)' }}>{alias}</h3>
-                <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', opacity: 0.8 }}>
-                    Keep sharing securely. No personal data is attached to this alias.
-                </p>
-            </Card>
+        <div className="animate-enter" style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h2 style={{ marginBottom: '2rem', textAlign: 'center' }}>Your Anonymous Profile</h2>
 
-            <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>AI Configuration</h3>
-            <Card>
-                <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>Configure your Provider / API Key here for the AI Path Finder. Keys are stored locally.</p>
+            <ProfileOverview profile={profileData} onUpdateProfile={handleUpdateProfile} />
 
-                <Input
-                    label="API Key (Bearer Token)"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-..."
-                />
-                <Input
-                    label="Custom Endpoint URL"
-                    value={apiEndpoint}
-                    onChange={(e) => setApiEndpoint(e.target.value)}
-                    placeholder="https://api.openai.com/v1/chat/completions"
-                />
-                <Input
-                    label="Model Name"
-                    value={apiModel}
-                    onChange={(e) => setApiModel(e.target.value)}
-                    placeholder="gpt-3.5-turbo"
-                />
+            <ActivityDashboard stats={stats} />
 
-                <Button onClick={handleSave} style={{ marginTop: '1rem' }}>
-                    {saved ? "Saved Configuration!" : "Save Keys"}
-                </Button>
-            </Card>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', marginBottom: '2rem' }}>
+                <PrivacySettings profile={profileData} onUpdateProfile={handleUpdateProfile} />
+            </div>
+
+            <PostHistory posts={posts} />
         </div>
     );
 }

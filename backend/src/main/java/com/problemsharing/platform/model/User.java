@@ -15,5 +15,13 @@ public class User {
     @Column(unique = true, nullable = false)
     private String alias; // Anonymous alias
 
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    // Privacy Settings
+    private boolean profileVisible = true;
+    private boolean allowAiAnalysis = true;
+    private boolean commentNotifications = true;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 }
