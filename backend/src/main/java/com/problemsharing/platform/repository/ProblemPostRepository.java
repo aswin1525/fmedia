@@ -7,9 +7,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ProblemPostRepository extends JpaRepository<ProblemPost, Long> {
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags ORDER BY p.createdAt DESC")
     List<ProblemPost> findAllByOrderByCreatedAtDesc();
 
-    List<ProblemPost> findByUserAliasOrderByCreatedAtDesc(String userAlias);
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE p.userAlias = :userAlias ORDER BY p.createdAt DESC")
+    List<ProblemPost> findByUserAliasOrderByCreatedAtDesc(@Param("userAlias") String userAlias);
 
     @Query("SELECT COUNT(p) FROM ProblemPost p WHERE p.userAlias = :alias")
     long countByUserAlias(@Param("alias") String alias);

@@ -5,7 +5,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "interactions")
+@Table(name = "interactions", 
+    indexes = {
+        @Index(name = "idx_interaction_post_user_type", columnList = "post_id, userAlias, type")
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"post_id", "userAlias", "type"})
+    }
+)
 @Data
 public class Interaction {
     @Id

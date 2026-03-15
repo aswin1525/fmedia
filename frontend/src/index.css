@@ -95,3 +95,21 @@ p {
   flex-direction: column;
   gap: 1.5rem;
 }
+
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 1200px;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: flex-start;
+    box-shadow: none;
+  }
+
+  .main-content {
+    padding-bottom: 2rem; /* Remove bottom bar padding */
+    padding-top: 3rem;
+    max-width: 800px;
+    margin: 0 auto; /* Center feed relatively */
+    width: 100%;
+  }
+}
