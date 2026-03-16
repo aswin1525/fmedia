@@ -18,10 +18,16 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final ProblemPostRepository problemPostRepository;
+    private final com.problemsharing.platform.repository.CommentRepository commentRepository;
+    private final com.problemsharing.platform.repository.InteractionRepository interactionRepository;
 
-    public UserService(UserRepository userRepository, ProblemPostRepository problemPostRepository) {
+    public UserService(UserRepository userRepository, ProblemPostRepository problemPostRepository,
+            com.problemsharing.platform.repository.CommentRepository commentRepository,
+            com.problemsharing.platform.repository.InteractionRepository interactionRepository) {
         this.userRepository = userRepository;
         this.problemPostRepository = problemPostRepository;
+        this.commentRepository = commentRepository;
+        this.interactionRepository = interactionRepository;
     }
 
     public User getOrCreateAnonymousUser(String existingAlias) {
@@ -88,6 +94,24 @@ public class UserService {
         user.setAllowAiAnalysis(request.isAllowAiAnalysis());
         user.setCommentNotifications(request.isCommentNotifications());
         return userRepository.save(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public User changeUserAlias(String oldAlias, String newAlias) {
+        // Validate uniqueness
+        if (userRepository.findByAlias(newAlias).isPresent()) {
+            throw new RuntimeException("Username is already taken.");
+        }
+
+        User user = userRepository.findByAlias(oldAlias).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setAlias(newAlias);
+        userRepository.save(user);
+
+        // Perform cascading bulk updates to migrate data
+        problemPostRepository.updateUserAlias(oldAlias, newAlias);
+        commentRepository.updateUserAlias(oldAlias, newAlias);
+        interactionRepository.updateUserAlias(oldAlias, newAlias);
+        return user;
     }
 
     public List<ProblemPost> getUserPosts(String alias) {

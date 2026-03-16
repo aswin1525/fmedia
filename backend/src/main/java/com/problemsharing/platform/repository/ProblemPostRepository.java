@@ -2,6 +2,7 @@ package com.problemsharing.platform.repository;
 
 import com.problemsharing.platform.model.ProblemPost;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -21,4 +22,8 @@ public interface ProblemPostRepository extends JpaRepository<ProblemPost, Long> 
 
     @Query("SELECT COALESCE(SUM(p.reposts), 0) FROM ProblemPost p WHERE p.userAlias = :alias")
     long sumRepostsByUserAlias(@Param("alias") String alias);
+
+    @Modifying
+    @Query("UPDATE ProblemPost p SET p.userAlias = :newAlias WHERE p.userAlias = :oldAlias")
+    void updateUserAlias(@Param("oldAlias") String oldAlias, @Param("newAlias") String newAlias);
 }

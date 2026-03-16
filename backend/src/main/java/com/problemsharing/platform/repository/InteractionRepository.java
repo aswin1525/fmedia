@@ -9,4 +9,10 @@ public interface InteractionRepository extends JpaRepository<Interaction, Long> 
             Interaction.InteractionType type);
 
     long countByPostIdAndType(Long postId, Interaction.InteractionType type);
+
+    void deleteByPostId(Long postId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE Interaction i SET i.userAlias = :newAlias WHERE i.userAlias = :oldAlias")
+    void updateUserAlias(String oldAlias, String newAlias);
 }

@@ -48,7 +48,7 @@ export default function SubmitProblem() {
 
             {step === 1 && (
                 <Card>
-                    <h3 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>Context</h3>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', fontWeight: '400' }}>Context</h3>
                     <Input
                         label="What happened?"
                         type="textarea"
@@ -68,7 +68,7 @@ export default function SubmitProblem() {
 
             {step === 2 && (
                 <Card className="animate-enter">
-                    <h3 style={{ marginBottom: '1rem', color: 'var(--red-accent)' }}>The Failure & Lesson</h3>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', fontWeight: '400' }}>The Failure & Lesson</h3>
                     <Input
                         label="What actually went wrong?"
                         type="textarea"
@@ -99,12 +99,12 @@ export default function SubmitProblem() {
             )}
 
             {step === 3 && aiResult && (
-                <Card className="animate-enter" style={{ border: '1px solid var(--accent)' }}>
-                    <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>AI Path Finder Insights</h3>
-                    <p style={{ lineHeight: '1.6', marginBottom: '1rem', fontStyle: 'italic' }}>"{aiResult.insights}"</p>
+                <Card className="animate-enter" style={{ border: '1px solid rgba(255,255,255,0.2)' }}>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', fontWeight: '400' }}>AI Path Finder Insights</h3>
+                    <p style={{ lineHeight: '1.6', marginBottom: '1rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>"{aiResult.insights}"</p>
                     <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                         {aiResult.tags.map(t => (
-                            <span key={t} style={{ background: 'var(--surface-color-light)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem' }}>#{t}</span>
+                            <span key={t} style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>#{t}</span>
                         ))}
                     </div>
                     <Button onClick={() => navigate('/')}>View in Home Feed</Button>

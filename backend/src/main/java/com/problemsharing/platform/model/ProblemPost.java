@@ -2,6 +2,7 @@ package com.problemsharing.platform.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.Formula;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,11 @@ public class ProblemPost {
 
     private String status;
 
+    @Formula("(select count(*) from comments c where c.post_id = id)")
+    private int commentCount;
+    
+    // Automatically populated by JPA callbacks
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ElementCollection

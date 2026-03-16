@@ -38,9 +38,14 @@ public class PostController {
         postService.interact(id, alias, type);
     }
 
+    @DeleteMapping("/{id}")
+    public void deletePost(@PathVariable Long id, @RequestParam String alias) {
+        postService.deletePost(id, alias);
+    }
+
     @PostMapping("/{id}/comments")
     public Comment addComment(@PathVariable Long id, @RequestParam String alias, @RequestBody Comment comment) {
-        return postService.addComment(id, alias, comment.getContent());
+        return postService.addComment(id, alias, comment.getContent(), comment.getParentId());
     }
 
     @GetMapping("/{id}/comments")

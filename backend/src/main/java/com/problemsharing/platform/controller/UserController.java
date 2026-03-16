@@ -33,6 +33,11 @@ public class UserController {
         return userService.updateUserProfile(alias, request);
     }
 
+    @PutMapping("/{oldAlias}/alias")
+    public User changeUserAlias(@PathVariable String oldAlias, @RequestParam String newAlias) {
+        return userService.changeUserAlias(oldAlias, newAlias);
+    }
+
     @GetMapping("/{alias}/posts")
     public List<ProblemPost> getUserPosts(@PathVariable String alias) {
         return userService.getUserPosts(alias);

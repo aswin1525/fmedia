@@ -21,6 +21,9 @@ public class Comment {
     @Column(nullable = false)
     private String userAlias;
 
+    @Column(name = "parent_id")
+    private Long parentId;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 

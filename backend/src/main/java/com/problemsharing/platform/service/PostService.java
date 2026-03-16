@@ -40,31 +40,58 @@ public class PostService {
     public void interact(Long postId, String userAlias, Interaction.InteractionType type) {
         ProblemPost post = getPostById(postId);
 
-        // Check if user already interacted
-        if (interactionRepository.findByPostIdAndUserAliasAndType(postId, userAlias, type).isPresent()) {
-            return; // Already interacted
-        }
+        interactionRepository.findByPostIdAndUserAliasAndType(postId, userAlias, type)
+            .ifPresentOrElse(
+                // If interaction exists, remove it (toggle off)
+                interaction -> {
+                    interactionRepository.delete(interaction);
+                    if (type == Interaction.InteractionType.UPVOTE) {
+                        post.setUpvotes(Math.max(0, post.getUpvotes() - 1));
+                    } else {
+                        post.setReposts(Math.max(0, post.getReposts() - 1));
+                    }
+                },
+                // If interaction doesn't exist, add it (toggle on)
+                () -> {
+                    Interaction interaction = new Interaction();
+                    interaction.setPost(post);
+                    interaction.setUserAlias(userAlias);
+                    interaction.setType(type);
+                    interactionRepository.save(interaction);
 
-        Interaction interaction = new Interaction();
-        interaction.setPost(post);
-        interaction.setUserAlias(userAlias);
-        interaction.setType(type);
-        interactionRepository.save(interaction);
+                    if (type == Interaction.InteractionType.UPVOTE) {
+                        post.setUpvotes(post.getUpvotes() + 1);
+                    } else {
+                        post.setReposts(post.getReposts() + 1);
+                    }
+                }
+            );
 
-        if (type == Interaction.InteractionType.UPVOTE) {
-            post.setUpvotes(post.getUpvotes() + 1);
-        } else {
-            post.setReposts(post.getReposts() + 1);
-        }
         postRepository.save(post);
     }
 
-    public Comment addComment(Long postId, String userAlias, String content) {
+    @Transactional
+    public void deletePost(Long postId, String userAlias) {
+        ProblemPost post = getPostById(postId);
+        if (!post.getUserAlias().equals(userAlias)) {
+            throw new RuntimeException("Unauthorized: You can only delete your own posts.");
+        }
+        
+        List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtAsc(postId);
+        commentRepository.deleteAll(comments);
+        
+        interactionRepository.deleteByPostId(postId);
+        
+        postRepository.delete(post);
+    }
+
+    public Comment addComment(Long postId, String userAlias, String content, Long parentId) {
         ProblemPost post = getPostById(postId);
         Comment comment = new Comment();
         comment.setPost(post);
         comment.setUserAlias(userAlias);
         comment.setContent(content);
+        comment.setParentId(parentId);
         return commentRepository.save(comment);
     }
 
