@@ -11,6 +11,18 @@ public interface ProblemPostRepository extends JpaRepository<ProblemPost, Long> 
     @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags ORDER BY p.createdAt DESC")
     List<ProblemPost> findAllByOrderByCreatedAtDesc();
 
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags ORDER BY p.upvotes DESC, p.reposts DESC, p.createdAt DESC")
+    List<ProblemPost> findAllTrending();
+
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE p.userAlias IN :aliases ORDER BY p.createdAt DESC")
+    List<ProblemPost> findByUserAliasesOrderByCreatedAtDesc(@Param("aliases") List<String> aliases);
+
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags t WHERE LOWER(t) IN :tags ORDER BY p.createdAt DESC")
+    List<ProblemPost> findByTagsInOrderByCreatedAtDesc(@Param("tags") List<String> tags);
+
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE LOWER(p.whatHappened) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.whatLearned) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY p.createdAt DESC")
+    List<ProblemPost> searchByKeyword(@Param("keyword") String keyword);
+
     @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE p.userAlias = :userAlias ORDER BY p.createdAt DESC")
     List<ProblemPost> findByUserAliasOrderByCreatedAtDesc(@Param("userAlias") String userAlias);
 

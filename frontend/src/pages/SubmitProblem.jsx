@@ -5,9 +5,11 @@ import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { generateTagsAndInsights } from '../utils/ai';
+import { useAuth } from '../context/AuthContext';
 
 export default function SubmitProblem() {
     const navigate = useNavigate();
+    const { user } = useAuth(); // ADDED AuthContext hooked into form submission
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -28,7 +30,7 @@ export default function SubmitProblem() {
         setAiResult({ tags, insights });
 
         // 2. Save Post
-        const alias = localStorage.getItem('userAlias') || 'Anonymous';
+        const alias = user?.alias || 'Anonymous';
         const payload = { ...formData, userAlias: alias, tags };
 
         try {

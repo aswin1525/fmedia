@@ -5,7 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_alias", columnList = "alias")
+})
 @Data
 public class User {
     @Id
@@ -14,6 +16,9 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String alias; // Anonymous alias
+
+    private String passwordHash; // Added for authentication
+
 
     @Column(columnDefinition = "TEXT")
     private String bio;

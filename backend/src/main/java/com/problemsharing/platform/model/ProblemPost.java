@@ -43,7 +43,9 @@ public class ProblemPost {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ElementCollection
-    @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"))
+    @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"), indexes = {
+        @Index(name = "idx_post_tag", columnList = "tag")
+    })
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
 

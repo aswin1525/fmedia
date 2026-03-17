@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import ProfileOverview from '../components/ProfileOverview';
 import ActivityDashboard from '../components/ActivityDashboard';
@@ -6,22 +8,74 @@ import PostHistory from '../components/PostHistory';
 import PrivacySettings from '../components/PrivacySettings';
 
 export default function Profile() {
-    const [alias, setAlias] = useState('');
+    const { alias: routeAlias } = useParams();
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+    
+    const targetAlias = routeAlias || user?.alias;
+    const isOwnProfile = !routeAlias || routeAlias === user?.alias;
+
     const [profileData, setProfileData] = useState(null);
     const [stats, setStats] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 });
 
     useEffect(() => {
-        const storedAlias = localStorage.getItem('userAlias') || '';
-        setAlias(storedAlias);
-
-        if (storedAlias) {
-            fetchProfileData(storedAlias);
-        } else {
+        if (!targetAlias) {
             setLoading(false);
+            return;
         }
-    }, []);
+        fetchProfileData(targetAlias);
+        if (user?.alias) {
+            fetchFollowStatus(targetAlias);
+        }
+        fetchFollowCounts(targetAlias);
+    }, [targetAlias, user]);
+
+    const fetchFollowStatus = async (target) => {
+        try {
+            const res = await fetch(`/api/follows/${target}/status?currentUserAlias=${user.alias}`);
+            if (res.ok) {
+                const data = await res.json();
+                setIsFollowing(data.following);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const fetchFollowCounts = async (target) => {
+        try {
+            const res = await fetch(`/api/follows/${target}/counts`);
+            if (res.ok) {
+                const data = await res.json();
+                setFollowCounts(data);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const toggleFollow = async () => {
+        if (!user) return navigate('/login');
+        try {
+            const res = await fetch(`/api/follows/${targetAlias}?currentUserAlias=${user.alias}`, { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                setIsFollowing(data.following);
+                fetchFollowCounts(targetAlias);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     const fetchProfileData = async (userAlias) => {
         setLoading(true);
@@ -73,19 +127,35 @@ export default function Profile() {
 
     if (loading) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading Profile...</div>;
 
-    if (!alias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>You must be assigned an alias first. Create a post to initialize your profile!</div>;
+    if (!targetAlias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/login">login</a> to view your profile!</div>;
 
     return (
-        <div className="animate-enter" style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h2 style={{ marginBottom: '2rem', textAlign: 'center' }}>Your Anonymous Profile</h2>
+        <div className="animate-enter" style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ margin: 0 }}>{isOwnProfile ? 'Your Profile' : `${targetAlias}'s Profile`}</h2>
+                {isOwnProfile ? (
+                    <button onClick={handleLogout} className="glass-btn" style={{ padding: '0.5rem 1rem', background: 'rgba(231, 76, 60, 0.2)', color: '#e74c3c' }}>Logout</button>
+                ) : (
+                    <button onClick={toggleFollow} className={`glass-btn ${isFollowing ? '' : 'primary-btn'}`} style={{ padding: '0.5rem 1.5rem', borderRadius: '12px' }}>
+                        {isFollowing ? 'Unfollow' : 'Follow'}
+                    </button>
+                )}
+            </div>
 
-            <ProfileOverview profile={profileData} onUpdateProfile={handleUpdateProfile} />
+            <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', justifyContent: 'center' }}>
+                <div style={{ textAlign: 'center' }}><strong style={{ fontSize: '1.5rem' }}>{followCounts.followers}</strong><div style={{ color: 'var(--text-secondary)' }}>Followers</div></div>
+                <div style={{ textAlign: 'center' }}><strong style={{ fontSize: '1.5rem' }}>{followCounts.following}</strong><div style={{ color: 'var(--text-secondary)' }}>Following</div></div>
+            </div>
+
+            <ProfileOverview profile={profileData} onUpdateProfile={isOwnProfile ? handleUpdateProfile : undefined} />
 
             <ActivityDashboard stats={stats} />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', marginBottom: '2rem' }}>
-                <PrivacySettings profile={profileData} onUpdateProfile={handleUpdateProfile} />
-            </div>
+            {isOwnProfile && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', marginBottom: '2rem' }}>
+                    <PrivacySettings profile={profileData} onUpdateProfile={handleUpdateProfile} />
+                </div>
+            )}
 
             <PostHistory posts={posts} />
         </div>

@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Card from '../components/Card';
 import { ThumbsUp, Share2, MessageCircle, Trash2, Send } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
     const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [activeComments, setActiveComments] = useState({}); // postId -> boolean
     const [commentInputs, setCommentInputs] = useState({}); // postId -> string
     const [postComments, setPostComments] = useState({}); // postId -> []
     // Track interactions ideally from backend, but for immediate UI feedback we can track locally
     const [userInteractions, setUserInteractions] = useState({ upvotes: new Set(), reposts: new Set() });
-    const alias = localStorage.getItem('userAlias') || 'Anonymous';
+    const { user } = useAuth();
+    const alias = user?.alias || 'Anonymous';
 
     useEffect(() => {
         fetchPosts();
@@ -18,11 +21,15 @@ export default function Home() {
     }, []);
 
     const fetchPosts = async () => {
+        setLoading(true);
         try {
-            const res = await axios.get('http://localhost:8080/api/posts');
+            const endpoint = user ? `/api/feed/personalized?userAlias=${user.alias}` : '/api/feed/trending';
+            const res = await axios.get(`http://localhost:8080${endpoint}`);
             setPosts(res.data);
         } catch (e) {
             console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -107,7 +114,14 @@ export default function Home() {
     return (
         <div className="animate-enter">
             <h2 style={{ marginBottom: '1.5rem', fontWeight: '300', letterSpacing: '1px' }}>FEED</h2>
-            {posts.map(post => {
+            
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                    Loading feed...
+                </div>
+            ) : (
+                <>
+                    {posts.map(post => {
                 const isOwner = post.userAlias === alias;
                 const hasUpvoted = userInteractions.upvotes.has(post.id);
                 const hasReposted = userInteractions.reposts.has(post.id);
@@ -258,7 +272,9 @@ export default function Home() {
                     </Card>
                 );
             })}
-            {posts.length === 0 && <p style={{ textAlign: 'center', marginTop: '3rem', color: 'var(--text-muted)' }}>No stories shared yet. Be the first.</p>}
+            {posts.length === 0 && !loading && <p style={{ textAlign: 'center', marginTop: '3rem', color: 'var(--text-muted)' }}>No stories shared yet. Be the first.</p>}
+            </>
+            )}
         </div>
     );
 }
