@@ -3,12 +3,24 @@ import Card from './Card';
 import Input from './Input';
 import Button from './Button';
 
-export default function ProfileOverview({ profile, onUpdateProfile }) {
+export default function ProfileOverview({ profile, onUpdateProfile, onUpdateAlias }) {
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState(profile?.bio || '');
+    const [alias, setAlias] = useState(profile?.alias || '');
 
-    const handleSave = () => {
-        onUpdateProfile({ bio });
+    const handleSave = async () => {
+        let finalAlias = profile?.alias;
+        if (alias !== profile?.alias && onUpdateAlias) {
+            const success = await onUpdateAlias(alias);
+            if (success) {
+                finalAlias = alias;
+            } else {
+                return; // abort if alias fails
+            }
+        }
+        if (onUpdateProfile) {
+            await onUpdateProfile({ bio }, finalAlias);
+        }
         setIsEditing(false);
     };
 
@@ -24,12 +36,18 @@ export default function ProfileOverview({ profile, onUpdateProfile }) {
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>Joined: {joinedDate}</p>
                 </div>
                 {!isEditing && (
-                    <Button onClick={() => setIsEditing(true)} variant="outline" size="small">Edit Bio</Button>
+                    <Button onClick={() => setIsEditing(true)} variant="outline" size="small" style={{ padding: '0.25rem 0.75rem', width: 'auto', whiteSpace: 'nowrap' }}>Edit Bio</Button>
                 )}
             </div>
 
             {isEditing ? (
                 <div style={{ marginTop: '1rem' }}>
+                    <Input
+                        label="Username"
+                        value={alias}
+                        onChange={(e) => setAlias(e.target.value)}
+                        placeholder="Your username..."
+                    />
                     <Input
                         label="Short Bio"
                         value={bio}

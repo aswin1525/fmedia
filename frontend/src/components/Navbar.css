@@ -43,7 +43,7 @@
 
 @media (min-width: 768px) {
     .bottom-nav {
-        position: sticky;
+        position: fixed;
         top: 0;
         left: 0;
         transform: none;
@@ -53,7 +53,7 @@
         flex-direction: column;
         justify-content: flex-start;
         align-items: flex-start;
-        padding: 3rem 1.5rem;
+        padding: 1.5rem;
         gap: 1.5rem;
         border-radius: 0;
         border-right: 1px solid rgba(255, 255, 255, 0.05);

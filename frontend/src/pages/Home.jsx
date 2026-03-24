@@ -12,6 +12,13 @@ export default function Home() {
     const [postComments, setPostComments] = useState({}); // postId -> []
     // Track interactions ideally from backend, but for immediate UI feedback we can track locally
     const [userInteractions, setUserInteractions] = useState({ upvotes: new Set(), reposts: new Set() });
+    
+    // Pull to refresh state
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [startY, setStartY] = useState(0);
+    const [pullDistance, setPullDistance] = useState(0);
+    const maxPullDistance = 80;
+
     const { user } = useAuth();
     const alias = user?.alias || 'Anonymous';
 
@@ -111,8 +118,46 @@ export default function Home() {
         } catch(e) { console.error(e); }
     };
 
+    const handleTouchStart = (e) => {
+        if (window.scrollY === 0) {
+            setStartY(e.touches[0].clientY);
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (startY > 0) {
+            const currentY = e.touches[0].clientY;
+            let distance = currentY - startY;
+            if (distance > 0) {
+                setPullDistance(Math.min(distance, maxPullDistance));
+            }
+        }
+    };
+
+    const handleTouchEnd = async () => {
+        if (pullDistance >= maxPullDistance) {
+            setIsRefreshing(true);
+            await fetchPosts();
+            setIsRefreshing(false);
+        }
+        setStartY(0);
+        setPullDistance(0);
+    };
+
     return (
-        <div className="animate-enter">
+        <div className="animate-enter" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+            <div style={{
+                height: (pullDistance > 0 || isRefreshing) ? `${Math.max(pullDistance, isRefreshing ? 40 : 0)}px` : '0px',
+                overflow: 'hidden',
+                transition: startY === 0 ? 'height 0.3s ease' : 'none',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'var(--primary)',
+                fontSize: '0.85rem'
+            }}>
+                {isRefreshing ? 'Refreshing...' : (pullDistance >= maxPullDistance ? 'Release to refresh' : 'Pull to refresh')}
+            </div>
             <h2 style={{ marginBottom: '1.5rem', fontWeight: '300', letterSpacing: '1px' }}>FEED</h2>
             
             {loading ? (

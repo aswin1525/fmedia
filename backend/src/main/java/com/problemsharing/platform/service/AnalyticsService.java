@@ -16,8 +16,13 @@ public class AnalyticsService {
         this.postRepository = postRepository;
     }
 
-    public Map<String, Object> getDashboardStats() {
-        List<ProblemPost> posts = postRepository.findAll();
+    public Map<String, Object> getDashboardStats(String userAlias) {
+        List<ProblemPost> posts;
+        if (userAlias != null && !userAlias.isEmpty()) {
+            posts = postRepository.findByUserAliasOrderByCreatedAtDesc(userAlias);
+        } else {
+            posts = postRepository.findAll();
+        }
         long totalPosts = posts.size();
         long totalSolved = posts.stream().filter(p -> "SOLVED".equalsIgnoreCase(p.getStatus())).count();
 

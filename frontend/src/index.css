@@ -101,18 +101,16 @@ p {
 
 @media (min-width: 768px) {
   .app-container {
-    max-width: 1200px;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-    align-items: flex-start;
+    max-width: 100%;
+    padding-left: 250px;
     box-shadow: none;
   }
 
   .main-content {
-    padding-bottom: 2rem; /* Remove bottom bar padding */
+    padding-bottom: 2rem;
     padding-top: 3rem;
     max-width: 800px;
-    margin: 0 auto; /* Center feed relatively */
+    margin: 0 auto;
     width: 100%;
   }
 }

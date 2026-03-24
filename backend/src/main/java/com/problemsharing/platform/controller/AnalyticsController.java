@@ -17,7 +17,7 @@ public class AnalyticsController {
     }
 
     @GetMapping
-    public Map<String, Object> getDashboardStats() {
-        return analyticsService.getDashboardStats();
+    public Map<String, Object> getDashboardStats(@org.springframework.web.bind.annotation.RequestParam(required = false) String userAlias) {
+        return analyticsService.getDashboardStats(userAlias);
     }
 }

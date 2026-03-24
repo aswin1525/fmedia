@@ -20,14 +20,17 @@ public class UserService {
     private final ProblemPostRepository problemPostRepository;
     private final com.problemsharing.platform.repository.CommentRepository commentRepository;
     private final com.problemsharing.platform.repository.InteractionRepository interactionRepository;
+    private final com.problemsharing.platform.repository.FollowRepository followRepository;
 
     public UserService(UserRepository userRepository, ProblemPostRepository problemPostRepository,
             com.problemsharing.platform.repository.CommentRepository commentRepository,
-            com.problemsharing.platform.repository.InteractionRepository interactionRepository) {
+            com.problemsharing.platform.repository.InteractionRepository interactionRepository,
+            com.problemsharing.platform.repository.FollowRepository followRepository) {
         this.userRepository = userRepository;
         this.problemPostRepository = problemPostRepository;
         this.commentRepository = commentRepository;
         this.interactionRepository = interactionRepository;
+        this.followRepository = followRepository;
     }
 
     public User getOrCreateAnonymousUser(String existingAlias) {
@@ -111,6 +114,8 @@ public class UserService {
         problemPostRepository.updateUserAlias(oldAlias, newAlias);
         commentRepository.updateUserAlias(oldAlias, newAlias);
         interactionRepository.updateUserAlias(oldAlias, newAlias);
+        followRepository.updateFollowerAlias(oldAlias, newAlias);
+        followRepository.updateFollowingAlias(oldAlias, newAlias);
         return user;
     }
 

@@ -51,4 +51,12 @@ public class ProblemPost {
 
     private int upvotes = 0;
     private int reposts = 0;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

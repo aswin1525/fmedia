@@ -88,9 +88,9 @@ export default function SubmitProblem() {
                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                         style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '1rem' }}
                     >
-                        <option value="ONGOING">Ongoing</option>
-                        <option value="SOLVED">Solved</option>
-                        <option value="GIVEN_UP">Given Up</option>
+                        <option value="ONGOING" style={{ background: '#0a0f1c' }}>Ongoing</option>
+                        <option value="SOLVED" style={{ background: '#0a0f1c' }}>Solved</option>
+                        <option value="GIVEN_UP" style={{ background: '#0a0f1c' }}>Given Up</option>
                     </select>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>

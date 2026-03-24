@@ -2,24 +2,33 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PieChart, Pie, Tooltip, Cell, ResponsiveContainer } from 'recharts';
 import Card from '../components/Card';
+import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
     const [stats, setStats] = useState({ totalPosts: 0, totalSolved: 0, tagCounts: {} });
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
 
     useEffect(() => {
-        fetchStats();
-    }, []);
+        if (user?.alias && !user.isAnonymous) {
+            fetchStats(user.alias);
+        } else if (user?.isAnonymous) {
+            // we can still fetch stats for anonymous if they have an alias but maybe they shouldn't?
+            fetchStats(user.alias);
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
 
-    const fetchStats = async () => {
+    const fetchStats = async (alias) => {
         try {
-            const res = await axios.get('http://localhost:8080/api/analytics');
+            const res = await axios.get(`http://localhost:8080/api/analytics?userAlias=${alias}`);
             setStats(res.data);
         } catch (e) {
             console.error(e);
             setStats({
-                totalPosts: 5, totalSolved: 3,
-                tagCounts: { failure: 4, react: 2, database: 3 }
+                totalPosts: 0, totalSolved: 0,
+                tagCounts: {}
             });
         }
         setLoading(false);
@@ -32,9 +41,14 @@ export default function Dashboard() {
         value: stats.tagCounts[key]
     }));
 
+    if (loading) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading Dashboard...</div>;
+    
+    // We expect user?.alias to exist (even for anonymous), but if completely absent:
+    if (!user?.alias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/login" style={{ color: 'var(--primary)' }}>login</a> to view your personalized dashboard!</div>;
+
     return (
         <div className="animate-enter">
-            <h2 style={{ marginBottom: '1.5rem' }}>Analytics Dashboard</h2>
+            <h2 style={{ marginBottom: '1.5rem' }}>Personalized Analytics</h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                 <Card style={{ textAlign: 'center' }}>

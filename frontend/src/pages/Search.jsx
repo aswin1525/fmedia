@@ -63,7 +63,7 @@ export default function Search() {
     };
 
     return (
-        <div className="animate-enter" style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' }}>
+        <div className="animate-enter" style={{ paddingBottom: '4rem' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Search Discover</h2>
             
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
@@ -73,7 +73,7 @@ export default function Search() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}
+                    style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-main)' }}
                 />
                 <button onClick={handleSearch} className="primary-btn glow-btn" style={{ padding: '0 1.5rem', borderRadius: '12px' }}>Search</button>
             </div>

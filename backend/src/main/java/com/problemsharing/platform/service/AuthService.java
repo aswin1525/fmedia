@@ -16,8 +16,16 @@ public class AuthService {
     }
 
     public User signup(AuthRequest request) {
-        if (userRepository.findByAlias(request.getAlias()).isPresent()) {
-            throw new RuntimeException("Username already exists");
+        java.util.Optional<User> existingUserOpt = userRepository.findByAlias(request.getAlias());
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+            if (existingUser.getPasswordHash() == null) {
+                // Claim anonymous account
+                existingUser.setPasswordHash(PasswordUtil.hashPassword(request.getPassword()));
+                return userRepository.save(existingUser);
+            } else {
+                throw new RuntimeException("Username already exists");
+            }
         }
         User user = new User();
         user.setAlias(request.getAlias());

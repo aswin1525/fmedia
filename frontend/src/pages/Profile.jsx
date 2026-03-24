@@ -9,7 +9,7 @@ import PrivacySettings from '../components/PrivacySettings';
 
 export default function Profile() {
     const { alias: routeAlias } = useParams();
-    const { user, logout } = useAuth();
+    const { user, login, logout } = useAuth();
     const navigate = useNavigate();
     
     const targetAlias = routeAlias || user?.alias;
@@ -109,9 +109,9 @@ export default function Profile() {
         }
     };
 
-    const handleUpdateProfile = async (updates) => {
+    const handleUpdateProfile = async (updates, targetAlias = user.alias) => {
         try {
-            const res = await fetch(`/api/users/${alias}/profile`, {
+            const res = await fetch(`/api/users/${targetAlias}/profile`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updates)
@@ -125,6 +125,44 @@ export default function Profile() {
         }
     };
 
+    const handleUpdateAlias = async (newAlias) => {
+        try {
+            const res = await fetch(`/api/users/${user.alias}/alias?newAlias=${newAlias}`, {
+                method: 'PUT'
+            });
+            if (res.ok) {
+                const updatedUser = await res.json();
+                login({ ...user, alias: updatedUser.alias });
+                if (routeAlias) {
+                    navigate(`/profile/${updatedUser.alias}`, { replace: true });
+                }
+                return true;
+            } else {
+                alert("Failed to update username. It might be taken.");
+                return false;
+            }
+        } catch (error) {
+            console.error("Error updating alias:", error);
+            return false;
+        }
+    };
+
+    const handleDeletePost = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this post?")) return;
+        try {
+            const res = await fetch(`/api/posts/${id}?alias=${user.alias}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                setPosts(posts.filter(p => p.id !== id));
+            } else {
+                alert("Failed to delete post.");
+            }
+        } catch (e) {
+            console.error("Failed to delete post", e);
+        }
+    };
+
     if (loading) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading Profile...</div>;
 
     if (!targetAlias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/login">login</a> to view your profile!</div>;
@@ -134,7 +172,7 @@ export default function Profile() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h2 style={{ margin: 0 }}>{isOwnProfile ? 'Your Profile' : `${targetAlias}'s Profile`}</h2>
                 {isOwnProfile ? (
-                    <button onClick={handleLogout} className="glass-btn" style={{ padding: '0.5rem 1rem', background: 'rgba(231, 76, 60, 0.2)', color: '#e74c3c' }}>Logout</button>
+                    <button onClick={handleLogout} className="glass-btn" style={{ padding: '0.4rem 1rem', background: 'transparent', color: '#e74c3c', border: '1px solid rgba(231, 76, 60, 0.5)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: '500' }}>Logout</button>
                 ) : (
                     <button onClick={toggleFollow} className={`glass-btn ${isFollowing ? '' : 'primary-btn'}`} style={{ padding: '0.5rem 1.5rem', borderRadius: '12px' }}>
                         {isFollowing ? 'Unfollow' : 'Follow'}
@@ -147,7 +185,11 @@ export default function Profile() {
                 <div style={{ textAlign: 'center' }}><strong style={{ fontSize: '1.5rem' }}>{followCounts.following}</strong><div style={{ color: 'var(--text-secondary)' }}>Following</div></div>
             </div>
 
-            <ProfileOverview profile={profileData} onUpdateProfile={isOwnProfile ? handleUpdateProfile : undefined} />
+            <ProfileOverview 
+                profile={profileData} 
+                onUpdateProfile={isOwnProfile ? handleUpdateProfile : undefined} 
+                onUpdateAlias={isOwnProfile ? handleUpdateAlias : undefined}
+            />
 
             <ActivityDashboard stats={stats} />
 
@@ -157,7 +199,7 @@ export default function Profile() {
                 </div>
             )}
 
-            <PostHistory posts={posts} />
+            <PostHistory posts={posts} isOwnProfile={isOwnProfile} onDelete={handleDeletePost} />
         </div>
     );
 }
