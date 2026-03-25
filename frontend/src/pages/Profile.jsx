@@ -59,7 +59,7 @@ export default function Profile() {
     };
 
     const toggleFollow = async () => {
-        if (!user) return navigate('/login');
+        if (!user) return navigate('/');
         try {
             const res = await fetch(`/api/follows/${targetAlias}?currentUserAlias=${user.alias}`, { method: 'POST' });
             if (res.ok) {
@@ -74,7 +74,7 @@ export default function Profile() {
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const fetchProfileData = async (userAlias) => {
@@ -111,7 +111,7 @@ export default function Profile() {
 
     const handleUpdateProfile = async (updates, targetAlias = user.alias) => {
         try {
-            const res = await fetch(`/api/users/${targetAlias}/profile`, {
+            const res = await fetch(`/api/users/${targetAlias}/profile?currentUserAlias=${user.alias}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updates)
@@ -127,7 +127,7 @@ export default function Profile() {
 
     const handleUpdateAlias = async (newAlias) => {
         try {
-            const res = await fetch(`/api/users/${user.alias}/alias?newAlias=${newAlias}`, {
+            const res = await fetch(`/api/users/${user.alias}/alias?newAlias=${newAlias}&currentUserAlias=${user.alias}`, {
                 method: 'PUT'
             });
             if (res.ok) {
@@ -165,7 +165,7 @@ export default function Profile() {
 
     if (loading) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading Profile...</div>;
 
-    if (!targetAlias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/login">login</a> to view your profile!</div>;
+    if (!targetAlias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/">login</a> to view your profile!</div>;
 
     return (
         <div className="animate-enter" style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '3rem' }}>

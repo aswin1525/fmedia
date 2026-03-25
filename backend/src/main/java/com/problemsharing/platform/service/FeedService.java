@@ -11,10 +11,23 @@ import java.util.List;
 public class FeedService {
     private final ProblemPostRepository postRepository;
     private final FollowRepository followRepository;
+    private final com.problemsharing.platform.repository.CommentRepository commentRepository;
 
-    public FeedService(ProblemPostRepository postRepository, FollowRepository followRepository) {
+    public FeedService(ProblemPostRepository postRepository, FollowRepository followRepository, com.problemsharing.platform.repository.CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.followRepository = followRepository;
+        this.commentRepository = commentRepository;
+    }
+
+    private List<ProblemPost> enrichWithTopComment(List<ProblemPost> posts) {
+        for (ProblemPost post : posts) {
+            List<com.problemsharing.platform.model.Comment> comments = commentRepository.findByPostIdOrderByCreatedAtAsc(post.getId());
+            if (!comments.isEmpty()) {
+                post.setTopCommentContent(comments.get(0).getContent());
+                post.setTopCommentUserAlias(comments.get(0).getUserAlias());
+            }
+        }
+        return posts;
     }
 
     public List<ProblemPost> getPersonalizedFeed(String userAlias) {
@@ -23,10 +36,11 @@ public class FeedService {
             return postRepository.findAllTrending(); // fallback to trending
         }
         List<String> followingAliases = following.stream().map(Follow::getFollowingAlias).toList();
-        return postRepository.findByUserAliasesOrderByCreatedAtDesc(followingAliases);
+        List<ProblemPost> posts = postRepository.findByUserAliasesOrderByCreatedAtDesc(followingAliases);
+        return enrichWithTopComment(posts);
     }
 
     public List<ProblemPost> getTrendingFeed() {
-        return postRepository.findAllTrending();
+        return enrichWithTopComment(postRepository.findAllTrending());
     }
 }

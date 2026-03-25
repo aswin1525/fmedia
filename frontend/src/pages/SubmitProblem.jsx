@@ -86,7 +86,9 @@ export default function SubmitProblem() {
                     <select
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '1rem' }}
+                        style={{ width: '100%', padding: '1rem', borderRadius: '16px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.08)', outline: 'none', transition: 'all 0.3s', fontSize: '1rem', marginBottom: '1.5rem' }}
+                        onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; e.target.style.background = 'rgba(20, 184, 166, 0.05)'; }}
+                        onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.background = 'rgba(0,0,0,0.2)'; }}
                     >
                         <option value="ONGOING" style={{ background: '#0a0f1c' }}>Ongoing</option>
                         <option value="SOLVED" style={{ background: '#0a0f1c' }}>Solved</option>

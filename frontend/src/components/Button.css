@@ -19,7 +19,8 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background-image: var(--noise-texture), linear-gradient(135deg, var(--primary), var(--accent));
+    background-color: var(--primary);
     color: white;
     box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
 }
@@ -30,7 +31,8 @@
 }
 
 .btn-secondary {
-    background: var(--surface-color-light);
+    background-image: var(--noise-texture);
+    background-color: var(--surface-color-light);
     color: var(--text-main);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -40,7 +42,8 @@
 }
 
 .btn-ghost {
-    background: transparent;
+    background-image: var(--noise-texture);
+    background-color: transparent;
     color: var(--text-muted);
 }
 

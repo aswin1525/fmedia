@@ -10,4 +10,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE Comment c SET c.userAlias = :newAlias WHERE c.userAlias = :oldAlias")
     void updateUserAlias(String oldAlias, String newAlias);
+
+    List<Comment> findByPostIdInOrderByCreatedAtDesc(List<Long> postIds);
 }

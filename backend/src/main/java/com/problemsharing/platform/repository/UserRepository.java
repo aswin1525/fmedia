@@ -10,6 +10,6 @@ import org.springframework.data.repository.query.Param;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByAlias(String alias);
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.alias) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<User> searchByAliasContainingIgnoreCase(@Param("keyword") String keyword);
+    @Query("SELECT u FROM User u WHERE LOWER(u.alias) LIKE LOWER(CONCAT('%', :keyword, '%')) AND u.alias NOT LIKE 'Anon-%' AND u.bio IS NOT NULL AND LENGTH(TRIM(u.bio)) > 0")
+    List<User> searchRealUsersByAlias(@Param("keyword") String keyword);
 }

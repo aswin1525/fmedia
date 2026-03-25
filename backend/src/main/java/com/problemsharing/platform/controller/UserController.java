@@ -29,12 +29,18 @@ public class UserController {
     }
 
     @PutMapping("/{alias}/profile")
-    public User updateUserProfile(@PathVariable String alias, @RequestBody UserProfileUpdateRequest request) {
+    public User updateUserProfile(@PathVariable String alias, @RequestParam String currentUserAlias, @RequestBody UserProfileUpdateRequest request) {
+        if (!alias.equals(currentUserAlias)) {
+            throw new RuntimeException("Unauthorized: You can only edit your own profile.");
+        }
         return userService.updateUserProfile(alias, request);
     }
 
     @PutMapping("/{oldAlias}/alias")
-    public User changeUserAlias(@PathVariable String oldAlias, @RequestParam String newAlias) {
+    public User changeUserAlias(@PathVariable String oldAlias, @RequestParam String newAlias, @RequestParam String currentUserAlias) {
+        if (!oldAlias.equals(currentUserAlias)) {
+            throw new RuntimeException("Unauthorized: You can only change your own alias.");
+        }
         return userService.changeUserAlias(oldAlias, newAlias);
     }
 

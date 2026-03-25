@@ -9,26 +9,31 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Search from './pages/Search'
 import { AuthProvider } from './context/AuthContext'
+import Landing from './pages/Landing'
+
+const Layout = ({ children }) => (
+    <div className="app-container">
+        <main className="main-content">
+            {children}
+        </main>
+        <Navbar />
+    </div>
+);
 
 function App() {
     return (
         <AuthProvider>
             <Router>
-                <div className="app-container">
-                    <main className="main-content">
-                        <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/submit" element={<SubmitProblem />} />
-                            <Route path="/search" element={<Search />} />
-                            <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/profile/:alias" element={<Profile />} />
-                            <Route path="/profile" element={<Profile />} />
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/signup" element={<Signup />} />
-                        </Routes>
-                    </main>
-                    <Navbar />
-                </div>
+                <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/feed" element={<Layout><Home /></Layout>} />
+                    <Route path="/submit" element={<Layout><SubmitProblem /></Layout>} />
+                    <Route path="/search" element={<Layout><Search /></Layout>} />
+                    <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+                    <Route path="/profile/:alias" element={<Layout><Profile /></Layout>} />
+                    <Route path="/profile" element={<Layout><Profile /></Layout>} />
+                    <Route path="/signup" element={<Navigate to="/" replace />} />
+                </Routes>
             </Router>
         </AuthProvider>
     )

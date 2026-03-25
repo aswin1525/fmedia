@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Card from '../components/Card';
 import { ThumbsUp, Share2, MessageCircle, Trash2, Send } from 'lucide-react';
@@ -16,7 +16,15 @@ export default function Home() {
     // Pull to refresh state
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [startY, setStartY] = useState(0);
-    const [pullDistance, setPullDistance] = useState(0);
+    const [pullDistanceState, setPullDistanceState] = useState(0);
+    const pullDistanceRef = useRef(0);
+    
+    const setPullDistance = (val) => {
+        setPullDistanceState(val);
+        pullDistanceRef.current = val;
+    };
+    const pullDistance = pullDistanceState;
+    const wheelTimeoutRef = useRef(null);
     const maxPullDistance = 80;
 
     const { user } = useAuth();
@@ -71,8 +79,6 @@ export default function Home() {
                 }
                 return post;
             }));
-            
-            fetchPosts(); // sync with backend
         } catch (e) {
             console.error(e);
         }
@@ -144,8 +150,27 @@ export default function Home() {
         setPullDistance(0);
     };
 
+    const handleWheel = (e) => {
+        if (window.scrollY <= 0 && e.deltaY < 0) {
+            const newDist = Math.min(pullDistanceRef.current + Math.abs(e.deltaY) * 0.4, maxPullDistance);
+            setPullDistance(newDist);
+            
+            if (wheelTimeoutRef.current) clearTimeout(wheelTimeoutRef.current);
+            wheelTimeoutRef.current = setTimeout(async () => {
+                if (pullDistanceRef.current >= maxPullDistance && !isRefreshing) {
+                    setIsRefreshing(true);
+                    await fetchPosts();
+                    setIsRefreshing(false);
+                }
+                setPullDistance(0);
+            }, 300);
+        } else if (pullDistanceRef.current > 0 && e.deltaY > 0) {
+             setPullDistance(0);
+        }
+    };
+
     return (
-        <div className="animate-enter" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+        <div className="animate-enter" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onWheel={handleWheel}>
             <div style={{
                 height: (pullDistance > 0 || isRefreshing) ? `${Math.max(pullDistance, isRefreshing ? 40 : 0)}px` : '0px',
                 overflow: 'hidden',
@@ -210,6 +235,19 @@ export default function Home() {
                                 <MessageCircle size={18} /> <span style={{ fontWeight: '400'}}>{post.commentCount || 0}</span>
                             </button>
                         </div>
+
+                        {post.topCommentContent && !activeComments[post.id] && (
+                            <div 
+                                style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }} 
+                                onClick={() => toggleComments(post.id)}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: '600' }}>{post.topCommentUserAlias}</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Top Comment</span>
+                                </div>
+                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0, fontStyle: 'italic' }}>"{post.topCommentContent}"</p>
+                            </div>
+                        )}
 
                         {/* Comments Section */}
                         {activeComments[post.id] && (

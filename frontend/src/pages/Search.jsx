@@ -73,18 +73,20 @@ export default function Search() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-main)' }}
+                    style={{ flex: 1, padding: '1rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', color: 'white', outline: 'none', transition: 'all 0.3s', fontSize: '1rem' }}
+                    onFocus={(e) => { e.target.style.borderColor = 'var(--primary)'; e.target.style.background = 'rgba(20, 184, 166, 0.05)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.background = 'rgba(0,0,0,0.2)'; }}
                 />
-                <button onClick={handleSearch} className="primary-btn glow-btn" style={{ padding: '0 1.5rem', borderRadius: '12px' }}>Search</button>
+                <button onClick={handleSearch} className="primary-btn glow-btn" style={{ padding: '0 1.5rem', borderRadius: '16px', fontWeight: '600' }}>Search</button>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', padding: '0.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                 {['trending', 'posts', 'tags', 'users'].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`glass-btn ${activeTab === tab ? 'active-tab' : ''}`}
-                        style={{ background: activeTab === tab ? 'var(--primary)' : 'transparent', border: 'none', color: activeTab === tab ? 'white' : 'var(--text-secondary)' }}
+                        style={{ flex: '1 1 auto', background: activeTab === tab ? 'var(--primary)' : 'transparent', border: 'none', color: activeTab === tab ? 'white' : 'var(--text-secondary)', padding: '0.6rem 1rem', borderRadius: '12px', fontWeight: '500', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
                     >
                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>

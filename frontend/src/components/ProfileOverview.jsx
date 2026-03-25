@@ -35,7 +35,7 @@ export default function ProfileOverview({ profile, onUpdateProfile, onUpdateAlia
                     <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>{profile.alias}</h3>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>Joined: {joinedDate}</p>
                 </div>
-                {!isEditing && (
+                {!isEditing && onUpdateProfile && (
                     <Button onClick={() => setIsEditing(true)} variant="outline" size="small" style={{ padding: '0.25rem 0.75rem', width: 'auto', whiteSpace: 'nowrap' }}>Edit Bio</Button>
                 )}
             </div>

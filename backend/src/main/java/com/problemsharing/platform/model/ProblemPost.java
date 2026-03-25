@@ -42,6 +42,14 @@ public class ProblemPost {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty
+    private String topCommentContent;
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty
+    private String topCommentUserAlias;
+
     @ElementCollection
     @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"), indexes = {
         @Index(name = "idx_post_tag", columnList = "tag")

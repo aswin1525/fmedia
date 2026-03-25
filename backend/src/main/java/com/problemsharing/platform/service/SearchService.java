@@ -26,6 +26,6 @@ public class SearchService {
     }
 
     public List<User> searchUsers(String keyword) {
-        return userRepository.searchByAliasContainingIgnoreCase(keyword);
+        return userRepository.searchRealUsersByAlias(keyword);
     }
 }

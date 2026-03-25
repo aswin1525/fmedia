@@ -44,7 +44,7 @@ export default function Dashboard() {
     if (loading) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading Dashboard...</div>;
     
     // We expect user?.alias to exist (even for anonymous), but if completely absent:
-    if (!user?.alias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/login" style={{ color: 'var(--primary)' }}>login</a> to view your personalized dashboard!</div>;
+    if (!user?.alias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/" style={{ color: 'var(--primary)' }}>login</a> to view your personalized dashboard!</div>;
 
     return (
         <div className="animate-enter">
@@ -60,6 +60,41 @@ export default function Dashboard() {
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Solved</p>
                 </Card>
             </div>
+
+            <h3 style={{ marginBottom: '1rem', marginTop: '2rem' }}>Activity & Notifications</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                <Card style={{ textAlign: 'center', padding: '1rem' }}>
+                    <h3 style={{ fontSize: '1.8rem', color: 'var(--accent)' }}>{stats.newFollowers || 0}</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Followers</p>
+                </Card>
+                <Card style={{ textAlign: 'center', padding: '1rem' }}>
+                    <h3 style={{ fontSize: '1.8rem', color: '#ec4899' }}>{stats.totalLikes || 0}</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Post Upvotes</p>
+                </Card>
+                <Card style={{ textAlign: 'center', padding: '1rem' }}>
+                    <h3 style={{ fontSize: '1.8rem', color: 'var(--primary)' }}>{stats.totalComments || 0}</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Comments</p>
+                </Card>
+            </div>
+
+            {stats.notifications && stats.notifications.length > 0 && (
+                <Card style={{ marginBottom: '2rem' }}>
+                    <h3 style={{ marginBottom: '1rem' }}>Recent Notifications</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                        {stats.notifications.map((notif, idx) => (
+                            <div key={idx} style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <span style={{ fontWeight: '600', color: 'var(--accent)', marginRight: '0.4rem' }}>{notif.userAlias}</span>
+                                    <span style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{notif.message}</span>
+                                </div>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                    {new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            )}
 
             <Card>
                 <h3 style={{ marginBottom: '1rem' }}>Trending Topics</h3>
