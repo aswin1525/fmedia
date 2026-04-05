@@ -24,8 +24,7 @@ export default function SubmitProblem() {
     const handleSubmit = async () => {
         setLoading(true);
         // 1. Generate AI Insights and Tags
-        const textContext = `Happened: ${formData.whatHappened}\nTried: ${formData.whatTried}\nFailed because: ${formData.whatWentWrong}`;
-        const { tags, insights } = await generateTagsAndInsights(textContext);
+        const { tags, insights } = await generateTagsAndInsights(formData);
 
         setAiResult({ tags, insights });
 
