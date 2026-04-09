@@ -47,4 +47,18 @@ public class AIController {
         String suggestion = aiGenerationService.generateSuggestion(whatHappened, whatTried, whatWentWrong);
         return ResponseEntity.ok(Map.of("suggestion", suggestion));
     }
+
+    @PostMapping("/analyze")
+    public ResponseEntity<Map<String, Object>> analyzePost(@RequestBody Map<String, String> request) {
+        String whatHappened = request.getOrDefault("whatHappened", "");
+        String whatTried = request.getOrDefault("whatTried", "");
+        String whatWentWrong = request.getOrDefault("whatWentWrong", "");
+
+        if (whatHappened.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "'What Happened' is required to generate insights."));
+        }
+
+        Map<String, Object> result = aiGenerationService.generateTagsAndSuggestion(whatHappened, whatTried, whatWentWrong);
+        return ResponseEntity.ok(result);
+    }
 }

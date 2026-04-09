@@ -22,7 +22,7 @@ export default function Dashboard() {
 
     const fetchStats = async (alias) => {
         try {
-            const res = await axios.get(`http://localhost:8080/api/analytics?userAlias=${alias}`);
+            const res = await axios.get(`/api/analytics?userAlias=${alias}`);
             setStats(res.data);
         } catch (e) {
             console.error(e);

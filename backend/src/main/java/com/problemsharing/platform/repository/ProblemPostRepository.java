@@ -17,22 +17,27 @@ public interface ProblemPostRepository extends JpaRepository<ProblemPost, Long> 
     @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE p.userAlias IN :aliases ORDER BY p.createdAt DESC")
     List<ProblemPost> findByUserAliasesOrderByCreatedAtDesc(@Param("aliases") List<String> aliases);
 
-    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags t WHERE LOWER(t) IN :tags ORDER BY p.createdAt DESC")
+    @Query("SELECT DISTINCT p FROM ProblemPost p JOIN p.tags t WHERE LOWER(t) IN :tags ORDER BY p.createdAt DESC")
     List<ProblemPost> findByTagsInOrderByCreatedAtDesc(@Param("tags") List<String> tags);
 
-    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE LOWER(p.whatHappened) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.whatLearned) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY p.createdAt DESC")
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE " +
+           "LOWER(p.whatHappened) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.whatTried) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.whatWentWrong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.whatLearned) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "ORDER BY p.createdAt DESC")
     List<ProblemPost> searchByKeyword(@Param("keyword") String keyword);
 
-    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE p.userAlias = :userAlias ORDER BY p.createdAt DESC")
+    @Query("SELECT DISTINCT p FROM ProblemPost p LEFT JOIN FETCH p.tags WHERE LOWER(p.userAlias) = LOWER(:userAlias) ORDER BY p.createdAt DESC")
     List<ProblemPost> findByUserAliasOrderByCreatedAtDesc(@Param("userAlias") String userAlias);
 
-    @Query("SELECT COUNT(p) FROM ProblemPost p WHERE p.userAlias = :alias")
+    @Query("SELECT COUNT(p) FROM ProblemPost p WHERE LOWER(p.userAlias) = LOWER(:alias)")
     long countByUserAlias(@Param("alias") String alias);
 
-    @Query("SELECT COALESCE(SUM(p.upvotes), 0) FROM ProblemPost p WHERE p.userAlias = :alias")
+    @Query("SELECT COALESCE(SUM(p.upvotes), 0) FROM ProblemPost p WHERE LOWER(p.userAlias) = LOWER(:alias)")
     long sumUpvotesByUserAlias(@Param("alias") String alias);
 
-    @Query("SELECT COALESCE(SUM(p.reposts), 0) FROM ProblemPost p WHERE p.userAlias = :alias")
+    @Query("SELECT COALESCE(SUM(p.reposts), 0) FROM ProblemPost p WHERE LOWER(p.userAlias) = LOWER(:alias)")
     long sumRepostsByUserAlias(@Param("alias") String alias);
 
     @Modifying

@@ -9,7 +9,7 @@ import PrivacySettings from '../components/PrivacySettings';
 
 export default function Profile() {
     const { alias: routeAlias } = useParams();
-    const { user, login, logout } = useAuth();
+    const { user, login, logout, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     
     const targetAlias = routeAlias || user?.alias;
@@ -23,6 +23,7 @@ export default function Profile() {
     const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 });
 
     useEffect(() => {
+        if (authLoading) return;
         if (!targetAlias) {
             setLoading(false);
             return;
@@ -89,10 +90,11 @@ export default function Profile() {
                 const data = await profileRes.json();
                 setProfileData(data.user);
                 setStats({
-                    totalPosts: data.totalPosts,
-                    totalUpvotes: data.totalUpvotes,
-                    totalReposts: data.totalReposts,
-                    commonTags: data.commonTags
+                    totalPosts: data.totalPosts || 0,
+                    totalUpvotes: data.totalUpvotes || 0,
+                    totalReposts: data.totalReposts || 0,
+                    commonTags: data.commonTags || [],
+                    joinDate: data.user?.createdAt
                 });
             } else {
                 console.error("Failed to fetch profile. Status:", profileRes.status);
@@ -106,6 +108,8 @@ export default function Profile() {
             console.error("Error fetching profile data:", error);
         } finally {
             setLoading(false);
+            // Scroll to top when profile data is loaded
+            window.scrollTo(0, 0);
         }
     };
 
@@ -163,12 +167,23 @@ export default function Profile() {
         }
     };
 
-    if (loading) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Loading Profile...</div>;
+    if (authLoading || loading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flexDirection: 'column', gap: '1rem' }}>
+            <div className="animate-float" style={{ fontSize: '2rem' }}>FailShare</div>
+            <div style={{ color: 'var(--text-muted)' }}>Loading Profile...</div>
+        </div>
+    );
 
-    if (!targetAlias) return <div className="animate-enter" style={{ textAlign: 'center', marginTop: '2rem' }}>Please <a href="/">login</a> to view your profile!</div>;
+    if (!targetAlias && !authLoading) return (
+        <div className="animate-enter glass-panel" style={{ textAlign: 'center', padding: '3rem', marginTop: '2rem' }}>
+            <h3>Profile not found</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Please login to view your profile or check the URL.</p>
+            <button onClick={() => navigate('/')} className="primary-btn" style={{ padding: '0.5rem 2rem', borderRadius: '12px' }}>Go Home</button>
+        </div>
+    );
 
     return (
-        <div className="animate-enter" style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '3rem' }}>
+        <div className="animate-enter" style={{ paddingBottom: '3rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h2 style={{ margin: 0 }}>{isOwnProfile ? 'Your Profile' : `${targetAlias}'s Profile`}</h2>
                 {isOwnProfile ? (
@@ -187,6 +202,7 @@ export default function Profile() {
 
             <ProfileOverview 
                 profile={profileData} 
+                stats={stats}
                 onUpdateProfile={isOwnProfile ? handleUpdateProfile : undefined} 
                 onUpdateAlias={isOwnProfile ? handleUpdateAlias : undefined}
             />

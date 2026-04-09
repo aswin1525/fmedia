@@ -126,13 +126,16 @@ p {
     max-width: 100%;
     padding-left: 250px;
     box-shadow: none;
+    display: block; /* Ensure it's not flex here to avoid centering the container itself */
   }
 
   .main-content {
     padding-bottom: 2rem;
     padding-top: 3rem;
     max-width: 800px;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
     width: 100%;
+    /* This will center the 800px content within the (100% - 250px) area */
   }
 }

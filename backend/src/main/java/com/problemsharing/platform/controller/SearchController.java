@@ -29,4 +29,9 @@ public class SearchController {
     public List<User> searchUsers(@RequestParam String keyword) {
         return searchService.searchUsers(keyword);
     }
+
+    @GetMapping("/suggestions")
+    public List<String> getSuggestions(@RequestParam String keyword) {
+        return searchService.getSuggestions(keyword);
+    }
 }

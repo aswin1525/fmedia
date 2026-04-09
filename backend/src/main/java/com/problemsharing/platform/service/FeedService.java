@@ -33,14 +33,21 @@ public class FeedService {
     public List<ProblemPost> getPersonalizedFeed(String userAlias) {
         List<Follow> following = followRepository.findByFollowerAlias(userAlias);
         if (following.isEmpty()) {
-            return postRepository.findAllTrending(); // fallback to trending
+            return enrichWithTopComment(postRepository.findAllByOrderByCreatedAtDesc()); // default to latest
         }
         List<String> followingAliases = following.stream().map(Follow::getFollowingAlias).toList();
         List<ProblemPost> posts = postRepository.findByUserAliasesOrderByCreatedAtDesc(followingAliases);
+        if (posts.isEmpty()) {
+            return enrichWithTopComment(postRepository.findAllByOrderByCreatedAtDesc()); // fallback to latest
+        }
         return enrichWithTopComment(posts);
     }
 
     public List<ProblemPost> getTrendingFeed() {
         return enrichWithTopComment(postRepository.findAllTrending());
+    }
+
+    public List<ProblemPost> getLatestFeed() {
+        return enrichWithTopComment(postRepository.findAllByOrderByCreatedAtDesc());
     }
 }

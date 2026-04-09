@@ -85,10 +85,16 @@ public class AnalyticsService {
             }
         }
 
+        // sort and limit tagCounts to top 5
+        Map<String, Integer> topTags = tagCounts.entrySet().stream()
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .limit(5)
+            .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, java.util.LinkedHashMap::new));
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalPosts", totalPosts);
         stats.put("totalSolved", totalSolved);
-        stats.put("tagCounts", tagCounts);
+        stats.put("tagCounts", topTags);
         stats.put("totalLikes", totalLikes);
         stats.put("totalComments", totalComments);
         stats.put("newFollowers", newFollowers);

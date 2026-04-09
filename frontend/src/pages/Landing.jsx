@@ -30,7 +30,7 @@ const Landing = () => {
         setError('');
         try {
             const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-            const response = await fetch(`http://localhost:8080${endpoint}`, {
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alias, password }),

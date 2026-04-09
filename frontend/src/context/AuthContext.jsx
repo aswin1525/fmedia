@@ -22,10 +22,12 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const login = (userData) => {
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('userAlias', userData.alias); // For components still using it
+    const login = (authData) => {
+        // Handle new structured response {token, user: {...}} or old structure {...}
+        const finalUserData = authData.token ? { ...authData.user, token: authData.token } : authData;
+        setUser(finalUserData);
+        localStorage.setItem('user', JSON.stringify(finalUserData));
+        localStorage.setItem('userAlias', finalUserData.alias); // For components still using it
     };
 
     const logout = () => {

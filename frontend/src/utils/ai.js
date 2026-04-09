@@ -2,18 +2,15 @@ import axios from 'axios';
 
 export async function generateTagsAndInsights(formData) {
     try {
-        const [tagsResponse, suggestionResponse] = await Promise.all([
-            axios.post('http://localhost:8080/api/ai/tags', { description: formData.whatHappened }),
-            axios.post('http://localhost:8080/api/ai/suggestion', { 
-                whatHappened: formData.whatHappened,
-                whatTried: formData.whatTried,
-                whatWentWrong: formData.whatWentWrong
-            })
-        ]);
+        const response = await axios.post('/api/ai/analyze', { 
+            whatHappened: formData.whatHappened,
+            whatTried: formData.whatTried,
+            whatWentWrong: formData.whatWentWrong
+        });
 
         return {
-            tags: tagsResponse.data || [],
-            insights: suggestionResponse.data?.suggestion || 'No suggestion could be generated.'
+            tags: response.data.tags || [],
+            insights: response.data.suggestion || 'No suggestion could be generated.'
         };
     } catch (error) {
         console.error("AI API Error:", error);

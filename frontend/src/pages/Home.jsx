@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Card from '../components/Card';
-import { ThumbsUp, Share2, MessageCircle, Trash2, Send } from 'lucide-react';
+import { ThumbsUp, Share2, MessageCircle, Trash2, Send, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
@@ -13,19 +14,7 @@ export default function Home() {
     // Track interactions ideally from backend, but for immediate UI feedback we can track locally
     const [userInteractions, setUserInteractions] = useState({ upvotes: new Set(), reposts: new Set() });
     
-    // Pull to refresh state
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [startY, setStartY] = useState(0);
-    const [pullDistanceState, setPullDistanceState] = useState(0);
-    const pullDistanceRef = useRef(0);
-    
-    const setPullDistance = (val) => {
-        setPullDistanceState(val);
-        pullDistanceRef.current = val;
-    };
-    const pullDistance = pullDistanceState;
-    const wheelTimeoutRef = useRef(null);
-    const maxPullDistance = 80;
+
 
     const { user } = useAuth();
     const alias = user?.alias || 'Anonymous';
@@ -38,8 +27,12 @@ export default function Home() {
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const endpoint = user ? `/api/feed/personalized?userAlias=${user.alias}` : '/api/feed/trending';
-            const res = await axios.get(`http://localhost:8080${endpoint}`);
+            let res;
+            if (user && user.alias && !user.isAnonymous && user.token) {
+                res = await axios.get('/api/feed/personalized', { params: { userAlias: user.alias } });
+            } else {
+                res = await axios.get('/api/feed/trending');
+            }
             setPosts(res.data);
         } catch (e) {
             console.error(e);
@@ -50,7 +43,7 @@ export default function Home() {
 
     const handleInteract = async (id, type) => {
         try {
-            await axios.post(`http://localhost:8080/api/posts/${id}/interact?alias=${alias}&type=${type}`);
+            await axios.post(`/api/posts/${id}/interact?alias=${alias}&type=${type}`);
             
             // Optimistic UI Update for toggle
             setPosts(posts.map(post => {
@@ -87,7 +80,7 @@ export default function Home() {
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this post?")) return;
         try {
-            await axios.delete(`http://localhost:8080/api/posts/${id}?alias=${alias}`);
+            await axios.delete(`/api/posts/${id}?alias=${alias}`);
             setPosts(posts.filter(p => p.id !== id));
         } catch (e) {
             console.error("Failed to delete post", e);
@@ -101,7 +94,7 @@ export default function Home() {
         
         if (isOpening && !postComments[id]) {
             try {
-                const res = await axios.get(`http://localhost:8080/api/posts/${id}/comments`);
+                const res = await axios.get(`/api/posts/${id}/comments`);
                 setPostComments({ ...postComments, [id]: res.data });
             } catch(e) { console.error(e); }
         }
@@ -112,7 +105,7 @@ export default function Home() {
         const content = commentInputs[inputKey]?.trim();
         if (!content) return;
         try {
-            const res = await axios.post(`http://localhost:8080/api/posts/${id}/comments?alias=${alias}`, { 
+            const res = await axios.post(`/api/posts/${id}/comments?alias=${alias}`, { 
                 content: content,
                 parentId: parentId
             });
@@ -124,65 +117,10 @@ export default function Home() {
         } catch(e) { console.error(e); }
     };
 
-    const handleTouchStart = (e) => {
-        if (window.scrollY === 0) {
-            setStartY(e.touches[0].clientY);
-        }
-    };
 
-    const handleTouchMove = (e) => {
-        if (startY > 0) {
-            const currentY = e.touches[0].clientY;
-            let distance = currentY - startY;
-            if (distance > 0) {
-                setPullDistance(Math.min(distance, maxPullDistance));
-            }
-        }
-    };
-
-    const handleTouchEnd = async () => {
-        if (pullDistance >= maxPullDistance) {
-            setIsRefreshing(true);
-            await fetchPosts();
-            setIsRefreshing(false);
-        }
-        setStartY(0);
-        setPullDistance(0);
-    };
-
-    const handleWheel = (e) => {
-        if (window.scrollY <= 0 && e.deltaY < 0) {
-            const newDist = Math.min(pullDistanceRef.current + Math.abs(e.deltaY) * 0.4, maxPullDistance);
-            setPullDistance(newDist);
-            
-            if (wheelTimeoutRef.current) clearTimeout(wheelTimeoutRef.current);
-            wheelTimeoutRef.current = setTimeout(async () => {
-                if (pullDistanceRef.current >= maxPullDistance && !isRefreshing) {
-                    setIsRefreshing(true);
-                    await fetchPosts();
-                    setIsRefreshing(false);
-                }
-                setPullDistance(0);
-            }, 300);
-        } else if (pullDistanceRef.current > 0 && e.deltaY > 0) {
-             setPullDistance(0);
-        }
-    };
 
     return (
-        <div className="animate-enter" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onWheel={handleWheel}>
-            <div style={{
-                height: (pullDistance > 0 || isRefreshing) ? `${Math.max(pullDistance, isRefreshing ? 40 : 0)}px` : '0px',
-                overflow: 'hidden',
-                transition: startY === 0 ? 'height 0.3s ease' : 'none',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                color: 'var(--primary)',
-                fontSize: '0.85rem'
-            }}>
-                {isRefreshing ? 'Refreshing...' : (pullDistance >= maxPullDistance ? 'Release to refresh' : 'Pull to refresh')}
-            </div>
+        <div className="animate-enter">
             <h2 style={{ marginBottom: '1.5rem', fontWeight: '300', letterSpacing: '1px' }}>FEED</h2>
             
             {loading ? (
@@ -200,7 +138,9 @@ export default function Home() {
                     <Card key={post.id} style={{ marginBottom: '1.5rem', padding: '1.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                                <span style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '1.1rem' }}>{post.userAlias}</span>
+                                <Link to={`/profile/${post.userAlias}`} style={{ color: 'var(--text-main)', fontWeight: '600', fontSize: '1.1rem', textDecoration: 'none', cursor: 'pointer' }} className="user-link">
+                                    {post.userAlias}
+                                </Link>
                                 <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 10px', borderRadius: '12px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                     {post.status}
                                 </span>
@@ -214,6 +154,12 @@ export default function Home() {
                         
                         <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.3rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>The Failure</h4>
                         <p style={{ marginBottom: '1.2rem', fontSize: '1.05rem', lineHeight: '1.6' }}>{post.whatHappened}</p>
+
+                        <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.3rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>The Attempt</h4>
+                        <p style={{ marginBottom: '1.2rem', fontSize: '1.05rem', lineHeight: '1.6' }}>{post.whatTried}</p>
+
+                        <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.3rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>What Went Wrong</h4>
+                        <p style={{ marginBottom: '1.2rem', fontSize: '1.05rem', lineHeight: '1.6', color: '#ff6b6b' }}>{post.whatWentWrong}</p>
 
                         <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.3rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>The Lesson</h4>
                         <p style={{ marginBottom: '1.5rem', fontSize: '1.05rem', lineHeight: '1.6', color: 'var(--accent)' }}>{post.whatLearned}</p>

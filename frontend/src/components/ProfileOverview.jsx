@@ -3,10 +3,18 @@ import Card from './Card';
 import Input from './Input';
 import Button from './Button';
 
-export default function ProfileOverview({ profile, onUpdateProfile, onUpdateAlias }) {
+export default function ProfileOverview({ profile, stats, onUpdateProfile, onUpdateAlias }) {
     const [isEditing, setIsEditing] = useState(false);
     const [bio, setBio] = useState(profile?.bio || '');
     const [alias, setAlias] = useState(profile?.alias || '');
+
+    // Sync state when profile prop changes
+    React.useEffect(() => {
+        if (profile) {
+            setBio(profile.bio || '');
+            setAlias(profile.alias || '');
+        }
+    }, [profile]);
 
     const handleSave = async () => {
         let finalAlias = profile?.alias;
@@ -24,7 +32,7 @@ export default function ProfileOverview({ profile, onUpdateProfile, onUpdateAlia
         setIsEditing(false);
     };
 
-    if (!profile) return <div>Loading Profile...</div>;
+    if (!profile) return null;
 
     const joinedDate = new Date(profile.createdAt).toLocaleDateString();
 
@@ -32,8 +40,12 @@ export default function ProfileOverview({ profile, onUpdateProfile, onUpdateAlia
         <Card style={{ marginBottom: '2rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>{profile.alias}</h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>Joined: {joinedDate}</p>
+                    <h2 style={{ color: 'var(--text-main)', marginBottom: '0.2rem', fontSize: '2.5rem', fontWeight: '800' }}>{profile.alias}</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem' }}>
+                        <span>Joined: {joinedDate}</span>
+                        {stats && <span>• {stats.totalPosts} Posts</span>}
+                        {stats && <span>• {stats.totalUpvotes} Upvotes</span>}
+                    </p>
                 </div>
                 {!isEditing && onUpdateProfile && (
                     <Button onClick={() => setIsEditing(true)} variant="outline" size="small" style={{ padding: '0.25rem 0.75rem', width: 'auto', whiteSpace: 'nowrap' }}>Edit Bio</Button>

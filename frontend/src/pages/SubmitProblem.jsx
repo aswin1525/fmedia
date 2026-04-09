@@ -19,26 +19,114 @@ export default function SubmitProblem() {
         whatLearned: '',
         status: 'ONGOING'
     });
+    const [manualTags, setManualTags] = useState('');
+    const [tagLoading, setTagLoading] = useState(false);
     const [aiResult, setAiResult] = useState(null);
+    const [listeningField, setListeningField] = useState(null);
+    const recognitionRef = React.useRef(null);
+    const initialTextRef = React.useRef("");
 
-    const handleSubmit = async () => {
+    const startDictation = (field) => {
+        // If already listening, stop it.
+        if (listeningField === field && recognitionRef.current) {
+            recognitionRef.current.stop();
+            setListeningField(null);
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert('Your browser does not support Voice Recognition.');
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = true; // Instantly type as you speak
+        recognition.maxAlternatives = 1;
+        
+        recognitionRef.current = recognition;
+        initialTextRef.current = formData[field] || "";
+
+        recognition.onstart = () => {
+            setListeningField(field);
+        };
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            const currentSpoken = finalTranscript + interimTranscript;
+            const prependedText = initialTextRef.current ? initialTextRef.current + ' ' : '';
+            
+            setFormData(prev => ({
+                ...prev,
+                [field]: prependedText + currentSpoken
+            }));
+            
+            // If it's final, update the initialTextRef so subsequent clauses append correctly!
+            if (finalTranscript) {
+                initialTextRef.current = prependedText + finalTranscript;
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error(event.error);
+            setListeningField(null);
+        };
+
+        recognition.onend = () => {
+            setListeningField(null);
+        };
+
+        recognition.start();
+    };
+
+    const handleGenerateTags = async () => {
+        setTagLoading(true);
+        try {
+            const res = await axios.post('/api/ai/tags', { description: formData.whatHappened });
+            if (res.data && res.data.length > 0) {
+                 setManualTags(res.data.join(', '));
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        setTagLoading(false);
+    };
+
+    const handleSubmit = async (useAiSummary) => {
         setLoading(true);
-        // 1. Generate AI Insights and Tags
-        const { tags, insights } = await generateTagsAndInsights(formData);
-
-        setAiResult({ tags, insights });
+        let finalTags = manualTags.split(',').map(t => t.trim()).filter(t => t);
+        
+        if (useAiSummary) {
+            const { tags, insights } = await generateTagsAndInsights(formData);
+            finalTags = finalTags.length > 0 ? Array.from(new Set([...finalTags, ...tags])) : tags;
+            setAiResult({ tags: finalTags, insights });
+        }
 
         // 2. Save Post
         const alias = user?.alias || 'Anonymous';
-        const payload = { ...formData, userAlias: alias, tags };
+        const payload = { ...formData, userAlias: alias, tags: finalTags };
 
         try {
-            await axios.post('http://localhost:8080/api/posts', payload);
-            setStep(3); // Show AI Path Finder Insights
+            await axios.post('/api/posts', payload);
+            if (useAiSummary) {
+                setStep(3); // Show AI Path Finder Insights
+            } else {
+                navigate('/'); // Just skip to feed
+            }
         } catch (e) {
             console.error(e);
-            // Move to step 3 anyway for demo purposes if backend fails
-            setStep(3);
+            if (useAiSummary) setStep(3);
         }
         setLoading(false);
     };
@@ -56,12 +144,16 @@ export default function SubmitProblem() {
                         placeholder="I was trying to deploy..."
                         value={formData.whatHappened}
                         onChange={(e) => setFormData({ ...formData, whatHappened: e.target.value })}
+                        onMicClick={() => startDictation('whatHappened')}
+                        isListening={listeningField === 'whatHappened'}
                     />
                     <Input
                         label="What did you try?"
                         type="textarea"
                         value={formData.whatTried}
                         onChange={(e) => setFormData({ ...formData, whatTried: e.target.value })}
+                        onMicClick={() => startDictation('whatTried')}
+                        isListening={listeningField === 'whatTried'}
                     />
                     <Button onClick={() => setStep(2)}>Next Step</Button>
                 </Card>
@@ -75,12 +167,16 @@ export default function SubmitProblem() {
                         type="textarea"
                         value={formData.whatWentWrong}
                         onChange={(e) => setFormData({ ...formData, whatWentWrong: e.target.value })}
+                        onMicClick={() => startDictation('whatWentWrong')}
+                        isListening={listeningField === 'whatWentWrong'}
                     />
                     <Input
                         label="What did you learn?"
                         type="textarea"
                         value={formData.whatLearned}
                         onChange={(e) => setFormData({ ...formData, whatLearned: e.target.value })}
+                        onMicClick={() => startDictation('whatLearned')}
+                        isListening={listeningField === 'whatLearned'}
                     />
                     <select
                         value={formData.status}
@@ -94,9 +190,31 @@ export default function SubmitProblem() {
                         <option value="GIVEN_UP" style={{ background: '#0a0f1c' }}>Given Up</option>
                     </select>
 
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '0.5rem' }}>
+                            <div style={{ width: '100%' }}>
+                                <Input
+                                    label="Tags (comma separated)"
+                                    type="text"
+                                    value={manualTags}
+                                    onChange={(e) => setManualTags(e.target.value)}
+                                    placeholder="e.g. react, css, deployment"
+                                />
+                            </div>
+                            <Button onClick={handleGenerateTags} disabled={tagLoading} variant="secondary" style={{ width: '100%', height: '48px' }}>
+                                {tagLoading ? 'Loading...' : 'Auto-generate Tags'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                         <Button variant="secondary" onClick={() => setStep(1)}>Back</Button>
-                        <Button onClick={handleSubmit}>{loading ? 'Analyzing via AI...' : 'Submit & Get AI Insights'}</Button>
+                        <Button onClick={() => handleSubmit(false)} disabled={loading} style={{ background: 'var(--bg-panel)', color: 'var(--text-main)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                            {loading ? 'Posting...' : 'Post Without AI Summary'}
+                        </Button>
+                        <Button onClick={() => handleSubmit(true)} disabled={loading}>
+                            {loading ? 'Analyzing via AI...' : 'Submit & Get AI Summary'}
+                        </Button>
                     </div>
                 </Card>
             )}

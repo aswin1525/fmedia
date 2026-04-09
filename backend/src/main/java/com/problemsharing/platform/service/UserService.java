@@ -101,8 +101,8 @@ public class UserService {
 
     @org.springframework.transaction.annotation.Transactional
     public User changeUserAlias(String oldAlias, String newAlias) {
-        // Validate uniqueness
-        if (userRepository.findByAlias(newAlias).isPresent()) {
+        // Validate uniqueness if the alias is actually changing
+        if (!newAlias.equalsIgnoreCase(oldAlias) && userRepository.findByAlias(newAlias).isPresent()) {
             throw new RuntimeException("Username is already taken.");
         }
 

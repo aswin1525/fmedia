@@ -88,6 +88,50 @@ public class AIGenerationService {
         return rawResponse;
     }
 
+    public Map<String, Object> generateTagsAndSuggestion(String whatHappened, String whatTried, String whatWentWrong) {
+        if (apiKey == null || apiKey.equals("YOUR_API_KEY_HERE") || apiKey.isEmpty()) {
+            return Map.of("tags", List.of("API Key Not Configured"), "suggestion", "Please configure your AI API Key in the backend application.properties file to receive AI suggestions.");
+        }
+
+        String prompt = String.format(
+            "You are a helpful software engineering mentor. A user has encountered a problem.\n" +
+            "What Happened: %s\n" +
+            "What they tried: %s\n" +
+            "What went wrong/Error: %s\n\n" +
+            "1. Extract up to 5 simple, lowercase, highly relevant tags.\n" +
+            "2. Provide a concise, helpful suggestion on what they should check or try next (under 3 sentences, friendly).\n" +
+            "You MUST output ONLY a valid JSON object without markdown formatting, with keys 'tags' (array of strings) and 'suggestion' (string).",
+            whatHappened, whatTried, whatWentWrong
+        );
+
+        String rawResponse = callAI(prompt);
+        if ("ERROR_RATE_LIMIT".equals(rawResponse)) {
+            return Map.of("tags", List.of("api-quota-exceeded"), "suggestion", "Our AI assistant is currently receiving too many requests or has hit its daily quota limit.");
+        } else if ("ERROR_API_FAILED".equals(rawResponse)) {
+            return Map.of("tags", List.of("api-error"), "suggestion", "Failed to connect to the AI Service. Please check if your API key is correct and valid.");
+        }
+        
+        try {
+            String cleanJson = rawResponse;
+            if (cleanJson.startsWith("```json")) cleanJson = cleanJson.substring(7);
+            if (cleanJson.startsWith("```")) cleanJson = cleanJson.substring(3);
+            if (cleanJson.endsWith("```")) cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
+
+            JsonNode responseJson = objectMapper.readTree(cleanJson.trim());
+            List<String> tags = new ArrayList<>();
+            if (responseJson.has("tags") && responseJson.get("tags").isArray()) {
+                 for (JsonNode t : responseJson.get("tags")) {
+                     String clean = t.asText().trim().toLowerCase().replaceAll("[^a-z0-9-]", "");
+                     if (!clean.isEmpty()) tags.add(clean);
+                 }
+            }
+            String suggestion = responseJson.has("suggestion") ? responseJson.get("suggestion").asText() : "Could not generate a suggestion.";
+            return Map.of("tags", tags, "suggestion", suggestion);
+        } catch (Exception e) {
+            return Map.of("tags", List.of("ai-parse-error"), "suggestion", "We generated insights but couldn't format them properly. Check AI configuration.");
+        }
+    }
+
     private String callAI(String prompt) {
         try {
             HttpHeaders headers = new HttpHeaders();
