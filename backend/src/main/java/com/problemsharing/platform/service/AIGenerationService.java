@@ -163,6 +163,8 @@ public class AIGenerationService {
             }
             return "Could not generate response.";
         } catch (Exception e) {
+            System.err.println("AI API call failed: " + e.getMessage());
+            e.printStackTrace();
             String errorMsg = e.getMessage() != null ? e.getMessage() : "";
             if (errorMsg.contains("429") || errorMsg.contains("Too Many Requests") || errorMsg.contains("Quota exceeded")) {
                 return "ERROR_RATE_LIMIT";

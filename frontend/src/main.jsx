@@ -4,6 +4,9 @@ import App from './App.jsx'
 import './index.css'
 import axios from 'axios'
 
+// Set API Base URL for production
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || '';
+
 axios.interceptors.request.use((config) => {
     const userStr = localStorage.getItem('user');
     if (userStr) {

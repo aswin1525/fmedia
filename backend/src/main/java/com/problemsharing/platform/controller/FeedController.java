@@ -23,4 +23,9 @@ public class FeedController {
     public List<ProblemPost> getTrendingFeed() {
         return feedService.getTrendingFeed();
     }
+
+    @GetMapping("/latest")
+    public List<ProblemPost> getLatestFeed() {
+        return feedService.getLatestFeed();
+    }
 }

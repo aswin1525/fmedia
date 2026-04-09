@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Home() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [feedType, setFeedType] = useState('latest'); // 'latest' or 'trending'
     const [activeComments, setActiveComments] = useState({}); // postId -> boolean
     const [commentInputs, setCommentInputs] = useState({}); // postId -> string
     const [postComments, setPostComments] = useState({}); // postId -> []
@@ -21,8 +22,7 @@ export default function Home() {
 
     useEffect(() => {
         fetchPosts();
-        // A complete robust implementation would fetch the user's past interactions here too.
-    }, []);
+    }, [feedType, user?.alias]);
 
     const fetchPosts = async () => {
         setLoading(true);
@@ -31,7 +31,7 @@ export default function Home() {
             if (user && user.alias && !user.isAnonymous && user.token) {
                 res = await axios.get('/api/feed/personalized', { params: { userAlias: user.alias } });
             } else {
-                res = await axios.get('/api/feed/trending');
+                res = await axios.get(`/api/feed/${feedType}`);
             }
             setPosts(res.data);
         } catch (e) {
@@ -121,7 +121,43 @@ export default function Home() {
 
     return (
         <div className="animate-enter">
-            <h2 style={{ marginBottom: '1.5rem', fontWeight: '300', letterSpacing: '1px' }}>FEED</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ margin: 0, fontWeight: '300', letterSpacing: '2px', fontSize: '1.2rem' }}>FEED</h2>
+                <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <button 
+                        onClick={() => setFeedType('latest')}
+                        style={{ 
+                            padding: '6px 16px', 
+                            borderRadius: '8px', 
+                            border: 'none', 
+                            background: feedType === 'latest' ? 'var(--primary)' : 'transparent',
+                            color: feedType === 'latest' ? 'white' : 'var(--text-muted)',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s'
+                        }}
+                    >
+                        Latest
+                    </button>
+                    <button 
+                        onClick={() => setFeedType('trending')}
+                        style={{ 
+                            padding: '6px 16px', 
+                            borderRadius: '8px', 
+                            border: 'none', 
+                            background: feedType === 'trending' ? 'var(--primary)' : 'transparent',
+                            color: feedType === 'trending' ? 'white' : 'var(--text-muted)',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s'
+                        }}
+                    >
+                        Trending
+                    </button>
+                </div>
+            </div>
             
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
